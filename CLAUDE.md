@@ -204,6 +204,30 @@ CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages (conversatio
 
 ---
 
+## Credenciales de acceso
+
+El usuario admin se crea automáticamente en el `lifespan` startup. Las credenciales son las variables de entorno:
+
+| Variable | Dónde está |
+|----------|-----------|
+| `ADMIN_USERNAME` | Railway (producción) o `backend/.env` (local) |
+| `ADMIN_PASSWORD` | Railway (producción) o `backend/.env` (local) |
+
+No hay credenciales hardcodeadas — el usuario usa lo que configuró en sus variables de entorno.
+
+---
+
+## Deploy — Directorios raíz
+
+| Plataforma | Root Directory |
+|------------|---------------|
+| Railway | `backend` |
+| Vercel | `frontend` |
+
+Ambas plataformas deben apuntar a su subdirectorio correspondiente, no a la raíz del repo.
+
+---
+
 ## Estado actual
 
 - [x] Backend completo (auth, chat streaming, conversations, users)

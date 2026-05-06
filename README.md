@@ -68,6 +68,19 @@ Esto:
 
 El usuario admin se crea automaticamente al iniciar el backend.
 
+## Credenciales de acceso
+
+El usuario admin se crea automáticamente al iniciar el backend con las variables de entorno que configuraste:
+
+| Campo | Valor |
+|-------|-------|
+| Usuario | el valor de `ADMIN_USERNAME` que pusiste en Railway / `.env` |
+| Contraseña | el valor de `ADMIN_PASSWORD` que pusiste en Railway / `.env` |
+
+> Si estás en local, son los valores de `backend/.env`. En producción, los que configuraste en Railway.
+
+---
+
 ## URLs utiles
 
 | Servicio | URL |
