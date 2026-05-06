@@ -77,6 +77,53 @@ El usuario admin se crea automaticamente al iniciar el backend.
 | Swagger UI | http://localhost:8000/docs |
 | Health check | http://localhost:8000/health |
 
+## Base de datos — Crear tablas en Supabase
+
+Ir a **Supabase Dashboard → SQL Editor → New query**, pegar y ejecutar:
+
+```sql
+-- 1. USERS
+CREATE TABLE IF NOT EXISTS users (
+    id            SERIAL PRIMARY KEY,
+    username      VARCHAR NOT NULL UNIQUE,
+    email         VARCHAR NOT NULL UNIQUE,
+    password_hash VARCHAR NOT NULL,
+    role          VARCHAR NOT NULL DEFAULT 'user',
+    is_active     BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_users_username ON users (username);
+CREATE INDEX IF NOT EXISTS idx_users_email    ON users (email);
+
+-- 2. CONVERSATIONS
+CREATE TABLE IF NOT EXISTS conversations (
+    id            SERIAL PRIMARY KEY,
+    user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title         VARCHAR(200) NOT NULL DEFAULT 'Nueva conversación',
+    model         VARCHAR NOT NULL DEFAULT 'claude-sonnet-4-20250514',
+    system_prompt TEXT NOT NULL DEFAULT 'Eres un asistente útil y amigable.',
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON conversations (user_id);
+
+-- 3. MESSAGES
+CREATE TABLE IF NOT EXISTS messages (
+    id              SERIAL PRIMARY KEY,
+    conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    role            VARCHAR NOT NULL,
+    content         TEXT NOT NULL,
+    tokens_used     INTEGER,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages (conversation_id);
+```
+
+> El usuario admin se crea automáticamente al iniciar el backend — no hace falta insertar nada.
+
+---
+
 ## Migraciones (Alembic)
 
 ```bash
@@ -94,19 +141,46 @@ alembic upgrade head
 
 ## Deploy
 
+### Orden de configuración
+
+```
+1. Crear tablas en Supabase (SQL Editor)
+2. Configurar variables en Railway → obtener URL del backend
+3. Configurar variables en Vercel con esa URL → obtener URL del frontend
+4. Actualizar ALLOWED_ORIGINS en Railway con la URL de Vercel
+5. Redeploy Railway para aplicar el CORS actualizado
+```
+
 ### Backend → Railway
 
 1. Conectar el repositorio en Railway
-2. Configurar las variables de entorno del backend
-3. Railway detecta `railway.toml` automaticamente
+2. Pestaña **Variables** → agregar:
+
+| Variable | Valor |
+|----------|-------|
+| `DATABASE_URL` | Session Pooler URL de Supabase (puerto 5432) |
+| `ANTHROPIC_API_KEY` | `sk-ant-...` |
+| `JWT_SECRET` | cadena aleatoria ≥32 caracteres |
+| `JWT_EXPIRE_HOURS` | `24` |
+| `ADMIN_USERNAME` | tu usuario admin |
+| `ADMIN_PASSWORD` | contraseña segura |
+| `ADMIN_EMAIL` | email del admin |
+| `ALLOWED_ORIGINS` | `https://tu-app.vercel.app` (sin slash final) |
+| `APP_ENV` | `production` |
+
+3. Railway redeploya automáticamente al guardar.
 
 ### Frontend → Vercel
 
 1. Conectar el repositorio en Vercel
-2. Configurar:
-   - `NEXT_PUBLIC_API_URL` = URL del backend en Railway
-   - `JWT_SECRET` = misma clave que el backend
-3. Actualizar `ALLOWED_ORIGINS` en el backend con la URL de Vercel
+2. **Settings → Environment Variables** → agregar:
+
+| Variable | Valor |
+|----------|-------|
+| `NEXT_PUBLIC_API_URL` | URL de Railway (sin slash final) |
+| `JWT_SECRET` | misma clave que en Railway |
+
+3. Redeploy para aplicar los cambios.
 
 ## Estructura
 

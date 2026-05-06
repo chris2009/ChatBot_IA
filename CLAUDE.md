@@ -103,6 +103,107 @@ JWT_SECRET=misma-clave-que-backend
 
 ---
 
+## Base de datos — SQL para crear tablas en Supabase
+
+Ejecutar en **Supabase Dashboard → SQL Editor → New query**:
+
+```sql
+-- 1. USERS
+CREATE TABLE IF NOT EXISTS users (
+    id            SERIAL PRIMARY KEY,
+    username      VARCHAR NOT NULL UNIQUE,
+    email         VARCHAR NOT NULL UNIQUE,
+    password_hash VARCHAR NOT NULL,
+    role          VARCHAR NOT NULL DEFAULT 'user',
+    is_active     BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_users_username ON users (username);
+CREATE INDEX IF NOT EXISTS idx_users_email    ON users (email);
+
+-- 2. CONVERSATIONS
+CREATE TABLE IF NOT EXISTS conversations (
+    id            SERIAL PRIMARY KEY,
+    user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title         VARCHAR(200) NOT NULL DEFAULT 'Nueva conversación',
+    model         VARCHAR NOT NULL DEFAULT 'claude-sonnet-4-20250514',
+    system_prompt TEXT NOT NULL DEFAULT 'Eres un asistente útil y amigable.',
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON conversations (user_id);
+
+-- 3. MESSAGES
+CREATE TABLE IF NOT EXISTS messages (
+    id              SERIAL PRIMARY KEY,
+    conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    role            VARCHAR NOT NULL,
+    content         TEXT NOT NULL,
+    tokens_used     INTEGER,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages (conversation_id);
+```
+
+> El usuario admin se crea automáticamente en el `lifespan` startup del backend — no insertar manualmente.
+
+---
+
+## Guía de deploy — Variables de entorno en producción
+
+### Railway (Backend)
+
+1. Ir a [railway.app](https://railway.app) → tu proyecto → servicio del backend
+2. Pestaña **Variables** → botón **New Variable** (o importar desde `.env`)
+3. Agregar una por una:
+
+| Variable | Valor en producción |
+|----------|-------------------|
+| `DATABASE_URL` | `postgresql://...supabase.com:5432/postgres` (Session Pooler) |
+| `ANTHROPIC_API_KEY` | `sk-ant-...` |
+| `JWT_SECRET` | cadena aleatoria ≥32 caracteres (igual que en Vercel) |
+| `JWT_EXPIRE_HOURS` | `24` |
+| `ADMIN_USERNAME` | tu usuario admin |
+| `ADMIN_PASSWORD` | contraseña segura |
+| `ADMIN_EMAIL` | email del admin |
+| `ALLOWED_ORIGINS` | `https://tu-app.vercel.app` (URL de Vercel, sin slash final) |
+| `APP_ENV` | `production` |
+
+4. Railway redeploya automáticamente al guardar variables.
+5. Copiar la URL pública del servicio (ej. `https://chatbot-backend.up.railway.app`) — la necesitarás en Vercel.
+
+> **Nota CORS:** `ALLOWED_ORIGINS` debe ser exactamente la URL de Vercel sin slash final. Si tienes dominio custom, agrégalo también separado por coma: `https://tudominio.com,https://tu-app.vercel.app`
+
+---
+
+### Vercel (Frontend)
+
+1. Ir a [vercel.com](https://vercel.com) → tu proyecto → **Settings** → **Environment Variables**
+2. Agregar:
+
+| Variable | Valor | Entornos |
+|----------|-------|----------|
+| `NEXT_PUBLIC_API_URL` | `https://chatbot-backend.up.railway.app` (URL de Railway, sin slash final) | Production, Preview, Development |
+| `JWT_SECRET` | misma cadena que usaste en Railway | Production, Preview, Development |
+
+3. Ir a **Deployments** → redeploy el último deploy para que tome las nuevas variables.
+
+> **`NEXT_PUBLIC_`** el prefijo hace que la variable sea accesible en el browser (client-side). `JWT_SECRET` NO lleva ese prefijo porque solo se usa en el `middleware.ts` (edge runtime server-side).
+
+---
+
+### Orden recomendado de configuración
+
+```
+1. Configurar variables en Railway → obtener URL del backend
+2. Configurar variables en Vercel con esa URL → obtener URL del frontend
+3. Actualizar ALLOWED_ORIGINS en Railway con la URL de Vercel
+4. Redeploy Railway para aplicar el CORS actualizado
+```
+
+---
+
 ## Estado actual
 
 - [x] Backend completo (auth, chat streaming, conversations, users)
