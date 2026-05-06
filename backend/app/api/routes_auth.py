@@ -31,17 +31,18 @@ def login(body: LoginRequest, response: Response, db: Session = Depends(get_db))
         expires_delta=timedelta(hours=settings.jwt_expire_hours),
     )
 
-    # Cookie httpOnly con el JWT completo
+    is_prod = settings.app_env == "production"
+    samesite = "none" if is_prod else "lax"
+
     response.set_cookie(
         key="auth-token",
         value=token,
         httponly=True,
-        secure=settings.app_env == "production",
-        samesite="lax",
+        secure=is_prod,
+        samesite=samesite,
         max_age=settings.jwt_expire_hours * 3600,
     )
 
-    # Cookie legible con info del usuario (base64 JSON)
     auth_info = base64.b64encode(
         json.dumps({"username": user.username, "role": user.role}).encode()
     ).decode()
@@ -49,8 +50,8 @@ def login(body: LoginRequest, response: Response, db: Session = Depends(get_db))
         key="auth-info",
         value=auth_info,
         httponly=False,
-        secure=settings.app_env == "production",
-        samesite="lax",
+        secure=is_prod,
+        samesite=samesite,
         max_age=settings.jwt_expire_hours * 3600,
     )
 
@@ -62,8 +63,10 @@ def login(body: LoginRequest, response: Response, db: Session = Depends(get_db))
 
 @router.post("/logout")
 def logout(response: Response):
-    response.delete_cookie("auth-token")
-    response.delete_cookie("auth-info")
+    is_prod = settings.app_env == "production"
+    samesite = "none" if is_prod else "lax"
+    response.delete_cookie("auth-token", secure=is_prod, samesite=samesite)
+    response.delete_cookie("auth-info", secure=is_prod, samesite=samesite)
     return {"message": "Sesión cerrada"}
 
 
