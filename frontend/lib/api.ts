@@ -1,6 +1,11 @@
 import type { User, Conversation, ConversationWithMessages } from "@/types";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// En producción las peticiones van a /api/* y Next.js las proxea a Railway.
+// Así el browser ve las cookies como del dominio Vercel y el middleware las lee.
+const BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "/api"
+    : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000");
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {

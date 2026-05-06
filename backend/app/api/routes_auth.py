@@ -32,14 +32,13 @@ def login(body: LoginRequest, response: Response, db: Session = Depends(get_db))
     )
 
     is_prod = settings.app_env == "production"
-    samesite = "none" if is_prod else "lax"
 
     response.set_cookie(
         key="auth-token",
         value=token,
         httponly=True,
         secure=is_prod,
-        samesite=samesite,
+        samesite="lax",
         max_age=settings.jwt_expire_hours * 3600,
     )
 
@@ -51,7 +50,7 @@ def login(body: LoginRequest, response: Response, db: Session = Depends(get_db))
         value=auth_info,
         httponly=False,
         secure=is_prod,
-        samesite=samesite,
+        samesite="lax",
         max_age=settings.jwt_expire_hours * 3600,
     )
 
@@ -64,9 +63,8 @@ def login(body: LoginRequest, response: Response, db: Session = Depends(get_db))
 @router.post("/logout")
 def logout(response: Response):
     is_prod = settings.app_env == "production"
-    samesite = "none" if is_prod else "lax"
-    response.delete_cookie("auth-token", secure=is_prod, samesite=samesite)
-    response.delete_cookie("auth-info", secure=is_prod, samesite=samesite)
+    response.delete_cookie("auth-token", secure=is_prod, samesite="lax")
+    response.delete_cookie("auth-info", secure=is_prod, samesite="lax")
     return {"message": "Sesión cerrada"}
 
 
