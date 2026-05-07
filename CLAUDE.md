@@ -85,6 +85,7 @@ ChatBot_IA/
 - Logs de actividad: tabla `activity_logs` con IP real (`X-Forwarded-For`), user-agent; se registra en login y logout
 - Avatar: base64 JPEG 128×128px máx, almacenado en columna `avatar_url TEXT` en users
 - El campo `subscription_expires_at` en `UserUpdate` usa `model_fields_set` para distinguir "no enviado" vs "explícitamente null"
+- **NUNCA** leer `document.cookie` directamente al renderizar un componente `"use client"` — en Next.js App Router el componente se renderiza también en el servidor (SSR), donde `document` no existe. Next.js puede conservar el HTML del servidor y no re-renderizar en el cliente, dejando el valor como `null` para siempre. **Solución**: usar `getMe()` (API call en `useEffect`) para datos que dependen de cookies o sesión.
 
 ---
 
