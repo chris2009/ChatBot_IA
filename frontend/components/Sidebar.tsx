@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import type { Conversation } from "@/types";
+import type { Conversation, AuthInfo } from "@/types";
 import { getConversations, deleteConversation, logout } from "@/lib/api";
 import { getAuthInfo } from "@/lib/auth";
 import { useTheme } from "@/context/ThemeContext";
@@ -31,7 +31,12 @@ export default function Sidebar({ refreshTrigger }: SidebarProps) {
   const { theme, toggleTheme } = useTheme();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const authInfo = getAuthInfo();
+  const [authInfo, setAuthInfo] = useState<AuthInfo | null>(null);
+
+  // Leer cookie sólo en el cliente (no disponible en SSR)
+  useEffect(() => {
+    setAuthInfo(getAuthInfo());
+  }, []);
 
   const loadConversations = useCallback(async () => {
     try {
