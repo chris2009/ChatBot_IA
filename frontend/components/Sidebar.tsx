@@ -124,7 +124,7 @@ export default function Sidebar({ refreshTrigger }: SidebarProps) {
             }`}
           >
             <Shield className="w-4 h-4" />
-            <span>Panel de administración</span>
+            <span>Gestión de usuarios</span>
           </Link>
         )}
         <Link
