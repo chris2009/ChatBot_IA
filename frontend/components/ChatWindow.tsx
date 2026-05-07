@@ -7,7 +7,22 @@ import MessageBubble from "./MessageBubble";
 import ChatInput from "./ChatInput";
 import { streamChat } from "@/lib/api";
 import { useSidebar } from "@/context/SidebarContext";
-import { Sparkles, Code2, Globe, Lightbulb } from "lucide-react";
+import { Sparkles, Code2, Globe, Lightbulb, Bot } from "lucide-react";
+
+function TypingIndicator() {
+  return (
+    <div className="flex gap-3 flex-row mb-4">
+      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+        <Bot className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+      </div>
+      <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5 h-10">
+        <span className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce [animation-delay:0ms]" />
+        <span className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce [animation-delay:160ms]" />
+        <span className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce [animation-delay:320ms]" />
+      </div>
+    </div>
+  );
+}
 
 const EXAMPLES = [
   { icon: Sparkles, text: "Explícame qué es la inteligencia artificial" },
@@ -158,6 +173,7 @@ export default function ChatWindow({ conversation }: ChatWindowProps) {
             {messages.map((msg) => (
               <MessageBubble key={msg.id} message={msg} />
             ))}
+            {isStreaming && !streamingContent && <TypingIndicator />}
             {isStreaming && streamingContent && (
               <MessageBubble
                 message={{
