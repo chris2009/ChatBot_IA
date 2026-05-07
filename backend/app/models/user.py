@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, func
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, func
 from app.database import Base
 
 
@@ -11,5 +11,7 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     role = Column(String, default="user")  # "admin" | "user"
     is_active = Column(Boolean, default=True)
+    subscription_expires_at = Column(DateTime(timezone=True), nullable=True)
+    avatar_url = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

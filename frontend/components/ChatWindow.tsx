@@ -133,10 +133,10 @@ export default function ChatWindow({ conversation }: ChatWindowProps) {
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full text-center gap-6">
             <div>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+              <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
                 Bienvenido a AI Chat
               </h2>
-              <p className="text-gray-500 text-sm">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 Escribe un mensaje o selecciona un ejemplo para comenzar
               </p>
             </div>
@@ -145,7 +145,7 @@ export default function ChatWindow({ conversation }: ChatWindowProps) {
                 <button
                   key={text}
                   onClick={() => handleSend(text)}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-indigo-400 hover:bg-indigo-50 text-left transition-colors text-sm text-gray-700"
+                  className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950 text-left transition-colors text-sm text-gray-700 dark:text-gray-300"
                 >
                   <Icon className="w-4 h-4 text-indigo-500 flex-shrink-0" />
                   <span>{text}</span>

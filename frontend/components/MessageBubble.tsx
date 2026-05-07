@@ -17,13 +17,13 @@ export default function MessageBubble({ message, isStreaming }: MessageBubblePro
       {/* Avatar */}
       <div
         className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-          isUser ? "bg-indigo-600" : "bg-gray-200"
+          isUser ? "bg-indigo-600" : "bg-gray-200 dark:bg-gray-700"
         }`}
       >
         {isUser ? (
           <User className="w-4 h-4 text-white" />
         ) : (
-          <Bot className="w-4 h-4 text-gray-700" />
+          <Bot className="w-4 h-4 text-gray-700 dark:text-gray-300" />
         )}
       </div>
 
@@ -32,7 +32,7 @@ export default function MessageBubble({ message, isStreaming }: MessageBubblePro
         className={`max-w-[75%] rounded-2xl px-4 py-3 ${
           isUser
             ? "bg-indigo-600 text-white rounded-tr-sm"
-            : "bg-gray-100 text-gray-900 rounded-tl-sm"
+            : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-tl-sm"
         }`}
       >
         {isUser ? (

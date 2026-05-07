@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Habilitar dark mode por clase .dark en el elemento html */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   html,
   body {
@@ -46,6 +49,9 @@
   font-size: 0.85em;
   font-family: ui-monospace, monospace;
 }
+.dark .markdown-body code {
+  background-color: rgba(255, 255, 255, 0.1);
+}
 .markdown-body pre {
   background-color: #1e1e2e;
   color: #cdd6f4;
@@ -65,6 +71,10 @@
   color: #6b7280;
   margin: 0.5rem 0;
 }
+.dark .markdown-body blockquote {
+  border-left-color: #4b5563;
+  color: #9ca3af;
+}
 .markdown-body table {
   border-collapse: collapse;
   width: 100%;
@@ -77,13 +87,23 @@
   padding: 0.4rem 0.75rem;
   text-align: left;
 }
+.dark .markdown-body th,
+.dark .markdown-body td {
+  border-color: #374151;
+}
 .markdown-body th {
   background-color: #f9fafb;
   font-weight: 600;
 }
+.dark .markdown-body th {
+  background-color: #1f2937;
+}
 .markdown-body a {
   color: #4f46e5;
   text-decoration: underline;
+}
+.dark .markdown-body a {
+  color: #818cf8;
 }
 .markdown-body strong {
   font-weight: 600;

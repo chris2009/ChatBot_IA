@@ -1,7 +1,5 @@
-import type { User, Conversation, ConversationWithMessages } from "@/types";
+import type { User, Conversation, ConversationWithMessages, ActivityLog } from "@/types";
 
-// En producción las peticiones van a /api/* y Next.js las proxea a Railway.
-// Así el browser ve las cookies como del dominio Vercel y el middleware las lee.
 const BASE_URL =
   process.env.NODE_ENV === "production"
     ? "/api"
@@ -61,13 +59,28 @@ export const createUser = (data: {
   email: string;
   password: string;
   role: string;
+  subscription_expires_at?: string | null;
 }) => request<User>("/users", { method: "POST", body: JSON.stringify(data) });
 
-export const updateUser = (id: number, data: Partial<User & { password: string }>) =>
+export const updateUser = (id: number, data: Partial<User & { password: string; subscription_expires_at: string | null }>) =>
   request<User>(`/users/${id}`, { method: "PUT", body: JSON.stringify(data) });
 
 export const deleteUser = (id: number) =>
   request<void>(`/users/${id}`, { method: "DELETE" });
+
+// Activity logs (admin)
+export const getAllActivityLogs = (userId?: number) =>
+  request<ActivityLog[]>(`/users/activity-logs/all${userId ? `?user_id=${userId}` : ""}`);
+
+export const getUserActivity = (userId: number) =>
+  request<ActivityLog[]>(`/users/${userId}/activity`);
+
+// Profile (current user)
+export const uploadAvatar = (avatarUrl: string) =>
+  request<User>("/users/me/avatar", {
+    method: "POST",
+    body: JSON.stringify({ avatar_url: avatarUrl }),
+  });
 
 // Streaming chat
 export function streamChat(
@@ -111,7 +124,6 @@ export function streamChat(
         if (data.startsWith("[ERROR:")) {
           throw new Error(data.slice(7, -1));
         }
-        // Restaurar saltos de línea escapados
         onChunk(data.replace(/\\n/g, "\n"));
       }
     }

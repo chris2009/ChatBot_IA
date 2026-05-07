@@ -39,7 +39,7 @@ export default function ChatInput({
   };
 
   return (
-    <div className="border-t border-gray-200 bg-white p-4">
+    <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
       <div className="flex items-end gap-3 max-w-3xl mx-auto">
         <div className="flex-1 relative">
           <textarea
@@ -50,9 +50,9 @@ export default function ChatInput({
             onKeyDown={handleKeyDown}
             disabled={disabled}
             placeholder="Escribe un mensaje... (Enter para enviar, Shift+Enter para nueva línea)"
-            className="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 pr-12 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 max-h-36 overflow-y-auto"
+            className="w-full resize-none rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-3 pr-12 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 max-h-36 overflow-y-auto placeholder-gray-400 dark:placeholder-gray-500"
           />
-          <span className="absolute bottom-3 right-3 text-xs text-gray-400">
+          <span className="absolute bottom-3 right-3 text-xs text-gray-400 dark:text-gray-500">
             {value.length > 0 ? value.length : ""}
           </span>
         </div>

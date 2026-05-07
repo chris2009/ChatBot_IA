@@ -7,9 +7,14 @@ from fastapi import Depends, HTTPException, status, Cookie
 from app.config import get_settings
 from app.database import get_db
 from app.models.user import User
+from app.models.activity_log import ActivityLog
 
 settings = get_settings()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+class SubscriptionExpiredError(Exception):
+    pass
 
 
 def hash_password(password: str) -> str:
@@ -63,7 +68,24 @@ def authenticate_user(db: Session, username: str, password: str) -> Optional[Use
     user = db.query(User).filter(User.username == username, User.is_active == True).first()
     if not user or not verify_password(password, user.password_hash):
         return None
+    if user.subscription_expires_at:
+        expires = user.subscription_expires_at
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=timezone.utc)
+        if expires < datetime.now(timezone.utc):
+            raise SubscriptionExpiredError()
     return user
+
+
+def log_activity(db: Session, user_id: int, action: str, ip_address: str, user_agent: str) -> None:
+    entry = ActivityLog(
+        user_id=user_id,
+        action=action,
+        ip_address=ip_address[:100] if ip_address else None,
+        user_agent=user_agent[:500] if user_agent else None,
+    )
+    db.add(entry)
+    db.commit()
 
 
 def create_admin_if_not_exists(db: Session) -> None:

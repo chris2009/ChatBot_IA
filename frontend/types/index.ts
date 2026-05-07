@@ -4,6 +4,8 @@ export interface User {
   email: string;
   role: "admin" | "user";
   is_active: boolean;
+  subscription_expires_at: string | null;
+  avatar_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -34,4 +36,14 @@ export interface ConversationWithMessages extends Conversation {
 export interface AuthInfo {
   username: string;
   role: "admin" | "user";
+}
+
+export interface ActivityLog {
+  id: number;
+  user_id: number;
+  username: string | null;
+  action: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
 }

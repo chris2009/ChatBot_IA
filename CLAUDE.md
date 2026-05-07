@@ -33,8 +33,8 @@ ChatBot_IA/
 │   │   ├── config.py         # Pydantic Settings desde .env
 │   │   ├── database.py       # SQLAlchemy + prepare_threshold=None (PgBouncer)
 │   │   ├── api/              # routes_auth, routes_chat, routes_conversations, routes_users, routes_health
-│   │   ├── models/           # User, Conversation, Message (SQLAlchemy)
-│   │   ├── schemas/          # Pydantic v2 schemas
+│   │   ├── models/           # User, Conversation, Message, ActivityLog (SQLAlchemy)
+│   │   ├── schemas/          # Pydantic v2 schemas (user, activity_log)
 │   │   └── services/         # auth_service, chat_service, conversation_service
 │   ├── alembic/              # Migraciones
 │   ├── requirements.txt
@@ -46,18 +46,21 @@ ChatBot_IA/
 │   │   ├── globals.css       # Estilos base + .markdown-body (sin @tailwindcss/typography)
 │   │   ├── login/page.tsx
 │   │   └── (main)/
-│   │       ├── layout.tsx    # SidebarProvider + LayoutInner
+│   │       ├── layout.tsx    # SidebarProvider + LayoutInner + Footer
 │   │       ├── chat/page.tsx
 │   │       ├── chat/[id]/page.tsx   # Client component (fetch con cookies del browser)
-│   │       └── users/page.tsx
+│   │       ├── users/page.tsx       # Admin: tabs Usuarios + Logs de actividad
+│   │       └── profile/page.tsx     # Perfil usuario: avatar, suscripción, tema
 │   ├── components/
-│   │   ├── Sidebar.tsx       # Responsive drawer/fixed, consume SidebarContext
-│   │   ├── ChatWindow.tsx    # Streaming SSE, usa useSidebar() para refresh
-│   │   ├── MessageBubble.tsx
-│   │   ├── ChatInput.tsx
+│   │   ├── Sidebar.tsx       # Responsive drawer/fixed, theme toggle, link a perfil
+│   │   ├── Footer.tsx        # Footer sticky © Sherlock
+│   │   ├── ChatWindow.tsx    # Streaming SSE, dark mode
+│   │   ├── MessageBubble.tsx # dark mode
+│   │   ├── ChatInput.tsx     # dark mode
 │   │   └── StreamingText.tsx # react-markdown + remark-gfm
 │   ├── context/
-│   │   └── SidebarContext.tsx  # triggerRefresh() compartido entre ChatWindow y Sidebar
+│   │   ├── SidebarContext.tsx  # triggerRefresh() compartido entre ChatWindow y Sidebar
+│   │   └── ThemeContext.tsx    # theme light/dark, persiste en localStorage
 │   ├── lib/
 │   │   ├── api.ts            # Cliente HTTP + streamChat() via ReadableStream
 │   │   └── auth.ts           # Lee cookie auth-info (base64 JSON)
@@ -77,6 +80,11 @@ ChatBot_IA/
 - El sidebar refresh usa `SidebarContext` con `triggerRefresh()` — evita prop drilling
 - Streaming SSE: los saltos de línea se escapan como `\n` en el stream y se restauran en el cliente
 - El backend crea el usuario admin automáticamente en el `lifespan` startup
+- Dark mode: Tailwind v4 con `@custom-variant dark (&:where(.dark, .dark *))` — ThemeContext agrega clase `.dark` al `<html>`
+- Suscripción: `subscription_expires_at = null` → sin límite; en pasado → expirada (bloquea login con HTTP 403 + `"SUBSCRIPTION_EXPIRED"`)
+- Logs de actividad: tabla `activity_logs` con IP real (`X-Forwarded-For`), user-agent; se registra en login y logout
+- Avatar: base64 JPEG 128×128px máx, almacenado en columna `avatar_url TEXT` en users
+- El campo `subscription_expires_at` en `UserUpdate` usa `model_fields_set` para distinguir "no enviado" vs "explícitamente null"
 
 ---
 
@@ -228,12 +236,38 @@ Ambas plataformas deben apuntar a su subdirectorio correspondiente, no a la raí
 
 ---
 
+## Migración de BD requerida (Supabase SQL Editor)
+
+```sql
+-- Nuevas columnas en users
+ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+
+-- Nueva tabla activity_logs
+CREATE TABLE IF NOT EXISTS activity_logs (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    action VARCHAR NOT NULL,
+    ip_address VARCHAR,
+    user_agent TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_user_id ON activity_logs (user_id);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs (created_at);
+```
+
+> **Nota**: `Base.metadata.create_all()` crea tablas nuevas automáticamente, pero NO agrega columnas a tablas existentes. Ejecutar el ALTER TABLE manualmente en Supabase antes de hacer deploy.
+
+---
+
 ## Estado actual
 
 - [x] Backend completo (auth, chat streaming, conversations, users)
-- [x] Frontend completo (login, chat, sidebar, users admin)
+- [x] Perfiles admin y usuario con suscripción y logs de actividad
+- [x] Dark/light mode con ThemeContext + Tailwind v4
+- [x] Footer sticky con copyright + Elaborado by Sherlock
 - [x] TypeScript sin errores (`tsc --noEmit` limpio)
-- [x] Build de producción exitoso (`next build` OK)
 - [x] Repositorio GitHub inicializado
+- [ ] Migración SQL ejecutada en Supabase (pendiente del usuario)
 - [ ] Variables de entorno configuradas (pendiente del usuario)
 - [ ] Deploy en Railway / Vercel (pendiente)

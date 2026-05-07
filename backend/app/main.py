@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.database import engine, SessionLocal, Base
-from app.models import User, Conversation, Message  # noqa: ensure models are loaded
+from app.models import User, Conversation, Message, ActivityLog  # noqa: ensure models are loaded
 from app.services.auth_service import create_admin_if_not_exists
 from app.api.routes_health import router as health_router
 from app.api.routes_auth import router as auth_router

@@ -12,6 +12,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    subscription_expires_at: Optional[datetime] = None
 
 
 class UserUpdate(BaseModel):
@@ -20,10 +21,17 @@ class UserUpdate(BaseModel):
     password: Optional[str] = None
     role: Optional[str] = None
     is_active: Optional[bool] = None
+    subscription_expires_at: Optional[datetime] = None
+
+
+class AvatarUpdate(BaseModel):
+    avatar_url: str
 
 
 class UserOut(UserBase):
     id: int
+    subscription_expires_at: Optional[datetime] = None
+    avatar_url: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
