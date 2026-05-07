@@ -3,16 +3,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import type { Conversation, AuthInfo } from "@/types";
-import { getConversations, deleteConversation, logout } from "@/lib/api";
-import { getAuthInfo } from "@/lib/auth";
+import type { Conversation, User } from "@/types";
+import { getConversations, deleteConversation, logout, getMe } from "@/lib/api";
 import { useTheme } from "@/context/ThemeContext";
 import {
   MessageSquare,
   Plus,
   Trash2,
   LogOut,
-  User,
+  User as UserIcon,
   Shield,
   Menu,
   X,
@@ -31,11 +30,13 @@ export default function Sidebar({ refreshTrigger }: SidebarProps) {
   const { theme, toggleTheme } = useTheme();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [authInfo, setAuthInfo] = useState<AuthInfo | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  // Leer cookie sólo en el cliente (no disponible en SSR)
+  // Cargar usuario actual desde la API (fiable en SSR y CSR)
   useEffect(() => {
-    setAuthInfo(getAuthInfo());
+    getMe()
+      .then(setCurrentUser)
+      .catch(() => setCurrentUser(null));
   }, []);
 
   const loadConversations = useCallback(async () => {
@@ -63,6 +64,8 @@ export default function Sidebar({ refreshTrigger }: SidebarProps) {
     await logout();
     router.push("/login");
   };
+
+  const isAdmin = currentUser?.role === "admin";
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-gray-900 dark:bg-gray-950 text-white">
@@ -118,7 +121,7 @@ export default function Sidebar({ refreshTrigger }: SidebarProps) {
 
       {/* Footer */}
       <div className="border-t border-gray-700 dark:border-gray-800 p-3 space-y-1">
-        {authInfo?.role === "admin" && (
+        {isAdmin && (
           <Link
             href="/users"
             onClick={() => setIsOpen(false)}
@@ -145,9 +148,9 @@ export default function Sidebar({ refreshTrigger }: SidebarProps) {
           <span>Mi perfil</span>
         </Link>
         <div className="flex items-center gap-2 px-3 py-2">
-          <User className="w-4 h-4 text-gray-400" />
+          <UserIcon className="w-4 h-4 text-gray-400" />
           <span className="text-xs text-gray-400 truncate flex-1">
-            {authInfo?.username ?? "Usuario"}
+            {currentUser?.username ?? "…"}
           </span>
           <button
             onClick={toggleTheme}
